@@ -14,8 +14,7 @@ def config_file(tmp_path: Path) -> Path:
         "mooring": "Mooring-A",
         "latitude": 69.5,
         "longitude": -12.3,
-        "water_depth": 250.0,
-        "instrument_depth": 50.0,
+        "bottom_depth": 250.0,
         "qc_enabled": True,
         "plots_enabled": True,
         "output_dir": "proc/",
@@ -63,8 +62,7 @@ def test_read_config_optional_fields_default_none(tmp_path: Path):
     result = read_config(p)
     assert result.latitude is None
     assert result.longitude is None
-    assert result.water_depth is None
-    assert result.instrument_depth is None
+    assert result.bottom_depth is None
 
 
 def test_read_config_missing_required_field_raises(tmp_path: Path):

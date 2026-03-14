@@ -523,10 +523,8 @@ def to_netcdf(ds: xr.Dataset, output: Path, config) -> None:
         ds.attrs["latitude"] = config.latitude
     if config.longitude is not None:
         ds.attrs["longitude"] = config.longitude
-    if config.water_depth is not None:
-        ds.attrs["water_depth"] = config.water_depth
-    if config.instrument_depth is not None:
-        ds.attrs["instrument_depth"] = config.instrument_depth
+    if config.bottom_depth is not None:
+        ds.attrs["bottom_depth"] = config.bottom_depth
 
     # Time encoding
     encoding = {

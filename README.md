@@ -91,8 +91,7 @@ pi: "Jane Smith"
 mooring: "Mooring-A"
 latitude: 69.5
 longitude: -12.3
-water_depth: 250.0
-instrument_depth: 50.0
+bottom_depth: 250.0
 qc_enabled: true
 plots_enabled: true
 output_dir: "proc/"
@@ -106,8 +105,7 @@ plots_dir: "fig/"
 | `mooring` | str | Yes | Mooring identifier |
 | `latitude` | float | No | Latitude coordinate |
 | `longitude` | float | No | Longitude coordinate |
-| `water_depth` | float | No | Water depth in metres |
-| `instrument_depth` | float | No | Instrument depth in metres |
+| `bottom_depth` | float | No | Bottom depth in metres |
 | `qc_enabled` | bool | Yes | Enable QC processing |
 | `plots_enabled` | bool | Yes | Enable plot generation |
 | `output_dir` | str | Yes | Output directory for processed data |

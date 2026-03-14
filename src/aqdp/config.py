@@ -30,8 +30,7 @@ class ProcessingConfig:
     mooring: str
     latitude: float | None
     longitude: float | None
-    water_depth: float | None
-    instrument_depth: float | None
+    bottom_depth: float | None
     qc_enabled: bool
     plots_enabled: bool
     output_dir: Path
@@ -45,8 +44,7 @@ mooring: "MOORING_ID"
 
 # latitude: 0.0
 # longitude: 0.0
-# water_depth: 0.0
-# instrument_depth: 0.0
+# bottom_depth: 0.0
 
 qc_enabled: true
 plots_enabled: true
@@ -106,8 +104,7 @@ def read_config(path: Path) -> ProcessingConfig:
         mooring=data["mooring"],
         latitude=data.get("latitude"),
         longitude=data.get("longitude"),
-        water_depth=data.get("water_depth"),
-        instrument_depth=data.get("instrument_depth"),
+        bottom_depth=data.get("bottom_depth"),
         qc_enabled=data["qc_enabled"],
         plots_enabled=data["plots_enabled"],
         output_dir=Path(data["output_dir"]),
