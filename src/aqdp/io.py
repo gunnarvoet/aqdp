@@ -414,3 +414,55 @@ def read_dia(path: Path, header: HeaderConfig) -> xr.Dataset:
     ds = xr.Dataset(data_vars, coords={"time": time.values})
     ds.attrs.update(_header_to_attrs(header))
     return ds
+
+
+_SSL_LINE_RE = re.compile(
+    r"^(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2}\.\d{3})\s+(\d+)\s+(\d+)\s+(\w+)\s+(.+)$"
+)
+
+
+def read_log(path: Path) -> xr.Dataset:
+    """Read a .ssl log file into an xarray Dataset.
+
+    Parameters
+    ----------
+    path : Path
+        Deployment root directory containing a ``log/`` subdirectory.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with log entries.
+    """
+    ssl_path = _find_file(path, "log", ".ssl")
+    text = ssl_path.read_text(encoding="utf-8", errors="replace")
+    data_lines = text.splitlines()[1:]  # skip header
+
+    times = []
+    error_codes = []
+    status_codes = []
+    levels = []
+    descriptions = []
+
+    for line in data_lines:
+        match = _SSL_LINE_RE.match(line.strip())
+        if not match:
+            continue
+        dt_str, ecode, scode, level, desc = match.groups()
+        times.append(pd.to_datetime(dt_str, format="%m/%d/%Y %H:%M:%S.%f"))
+        error_codes.append(ecode)
+        status_codes.append(scode)
+        levels.append(level)
+        descriptions.append(desc)
+
+    time_arr = pd.DatetimeIndex(times)
+
+    return xr.Dataset(
+        {
+            "error_code": ("time", error_codes),
+            "status_code": ("time", status_codes),
+            "level": ("time", levels),
+            "description": ("time", descriptions),
+        },
+        coords={"time": time_arr.values},
+    )

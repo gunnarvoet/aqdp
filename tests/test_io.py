@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from aqdp.io import HeaderConfig, read_dat, read_dia, read_header
+from aqdp.io import HeaderConfig, read_dat, read_dia, read_header, read_log
 
 
 def test_read_header_returns_header_config(deployment_dir: Path):
@@ -210,3 +210,26 @@ def test_read_dia_first_velocity_values(deployment_dir: Path):
     assert float(ds.u.values[0]) == pytest.approx(-0.110)
     assert float(ds.v.values[0]) == pytest.approx(-0.083)
     assert float(ds.w.values[0]) == pytest.approx(-0.242)
+
+
+# --- .ssl log parsing tests ---
+
+
+def test_read_log_returns_dataset(deployment_dir: Path):
+    ds = read_log(deployment_dir)
+    assert isinstance(ds, xr.Dataset)
+
+
+def test_read_log_has_expected_variables(deployment_dir: Path):
+    ds = read_log(deployment_dir)
+    assert "error_code" in ds
+    assert "status_code" in ds
+    assert "level" in ds
+    assert "description" in ds
+    assert "time" in ds.coords
+
+
+def test_read_log_first_entry(deployment_dir: Path):
+    ds = read_log(deployment_dir)
+    assert str(ds.description.values[0]) == "First measurement"
+    assert str(ds.level.values[0]) == "Info"
