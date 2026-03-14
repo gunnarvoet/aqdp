@@ -17,14 +17,31 @@ def main():
 
 @main.command()
 @click.argument("deployment_dir", type=click.Path(exists=True, path_type=Path))
-@click.option("--config", required=True, type=click.Path(exists=True, path_type=Path), help="YAML config file")
-@click.option("--output-dir", type=click.Path(path_type=Path), default=None, help="Override output directory")
+@click.option(
+    "--config",
+    required=True,
+    type=click.Path(exists=True, path_type=Path),
+    help="YAML config file",
+)
+@click.option(
+    "--output-dir",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Override output directory",
+)
 @click.option("--no-qc", is_flag=True, help="Skip QC steps")
 @click.option("--no-plots", is_flag=True, help="Skip plot generation")
 def process(deployment_dir, config, output_dir, no_qc, no_plots):
     """Process an Aquadopp deployment directory."""
     from aqdp.config import read_config
-    from aqdp.io import AqdpParsingError, read_dat, read_dia, read_header, read_log, to_netcdf
+    from aqdp.io import (
+        AqdpParsingError,
+        read_dat,
+        read_dia,
+        read_header,
+        read_log,
+        to_netcdf,
+    )
     from aqdp.plot import plot_diagnostics, plot_pressure, plot_velocity
     from aqdp.qc import flag_by_range, flag_by_status
 

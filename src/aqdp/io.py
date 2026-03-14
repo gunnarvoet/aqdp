@@ -232,16 +232,28 @@ DAT_VAR_ATTRS = {
         "standard_name": "speed_of_sound_in_sea_water",
         "long_name": "Measured sound speed",
     },
-    "sound_speed_used": {"units": "m/s", "long_name": "Sound speed used in calculations"},
+    "sound_speed_used": {
+        "units": "m/s",
+        "long_name": "Sound speed used in calculations",
+    },
     "heading": {"units": "degrees", "long_name": "Heading"},
-    "pitch": {"units": "degrees", "standard_name": "platform_pitch", "long_name": "Pitch"},
+    "pitch": {
+        "units": "degrees",
+        "standard_name": "platform_pitch",
+        "long_name": "Pitch",
+    },
     "roll": {"units": "degrees", "standard_name": "platform_roll", "long_name": "Roll"},
     "pressure": {
         "units": "dbar",
         "standard_name": "sea_water_pressure",
         "long_name": "Pressure",
     },
-    "depth": {"units": "m", "standard_name": "depth", "long_name": "Depth", "positive": "down"},
+    "depth": {
+        "units": "m",
+        "standard_name": "depth",
+        "long_name": "Depth",
+        "positive": "down",
+    },
     "temperature": {
         "units": "degrees_C",
         "standard_name": "sea_water_temperature",
@@ -334,7 +346,14 @@ def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:
     # Construct time coordinate from columns 0-5
     time = pd.to_datetime(
         df[[2, 0, 1, 3, 4, 5]].rename(
-            columns={2: "year", 0: "month", 1: "day", 3: "hour", 4: "minute", 5: "second"}
+            columns={
+                2: "year",
+                0: "month",
+                1: "day",
+                3: "hour",
+                4: "minute",
+                5: "second",
+            }
         )
     )
 
@@ -401,7 +420,14 @@ def read_dia(path: Path, header: HeaderConfig) -> xr.Dataset:
     # Construct time coordinate from columns 0-5
     time = pd.to_datetime(
         df[[2, 0, 1, 3, 4, 5]].rename(
-            columns={2: "year", 0: "month", 1: "day", 3: "hour", 4: "minute", 5: "second"}
+            columns={
+                2: "year",
+                0: "month",
+                1: "day",
+                3: "hour",
+                4: "minute",
+                5: "second",
+            }
         )
     )
 

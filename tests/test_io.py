@@ -123,16 +123,32 @@ def test_read_dat_has_all_variables(deployment_dir: Path):
     header = read_header(deployment_dir)
     ds = read_dat(deployment_dir, header)
     expected = {
-        "u", "v", "w",
-        "amplitude_beam1", "amplitude_beam2", "amplitude_beam3",
-        "battery_voltage", "sound_speed", "sound_speed_used",
-        "heading", "pitch", "roll",
-        "pressure", "depth", "temperature",
-        "analog_input_1", "analog_input_2",
-        "speed", "direction",
-        "magnetometer_x", "magnetometer_y", "magnetometer_z",
-        "burst_counter", "ensemble_counter",
-        "error_code", "status_code",
+        "u",
+        "v",
+        "w",
+        "amplitude_beam1",
+        "amplitude_beam2",
+        "amplitude_beam3",
+        "battery_voltage",
+        "sound_speed",
+        "sound_speed_used",
+        "heading",
+        "pitch",
+        "roll",
+        "pressure",
+        "depth",
+        "temperature",
+        "analog_input_1",
+        "analog_input_2",
+        "speed",
+        "direction",
+        "magnetometer_x",
+        "magnetometer_y",
+        "magnetometer_z",
+        "burst_counter",
+        "ensemble_counter",
+        "error_code",
+        "status_code",
     }
     assert expected.issubset(set(ds.data_vars))
 
@@ -275,7 +291,9 @@ def test_to_netcdf_cf_conventions(deployment_dir: Path, tmp_path: Path, sample_c
     result.close()
 
 
-def test_to_netcdf_roundtrip_velocity(deployment_dir: Path, tmp_path: Path, sample_config):
+def test_to_netcdf_roundtrip_velocity(
+    deployment_dir: Path, tmp_path: Path, sample_config
+):
     header = read_header(deployment_dir)
     ds = read_dat(deployment_dir, header)
     output = tmp_path / "test.nc"

@@ -12,7 +12,14 @@ class AqdpConfigError(Exception):
     """Raised when configuration is invalid or missing required fields."""
 
 
-_REQUIRED_FIELDS = {"project", "pi", "mooring", "qc_enabled", "plots_enabled", "output_dir"}
+_REQUIRED_FIELDS = {
+    "project",
+    "pi",
+    "mooring",
+    "qc_enabled",
+    "plots_enabled",
+    "output_dir",
+}
 
 
 @dataclass
@@ -52,7 +59,9 @@ def read_config(path: Path) -> ProcessingConfig:
 
     missing = _REQUIRED_FIELDS - set(data.keys())
     if missing:
-        raise AqdpConfigError(f"Missing required config fields: {', '.join(sorted(missing))}")
+        raise AqdpConfigError(
+            f"Missing required config fields: {', '.join(sorted(missing))}"
+        )
 
     return ProcessingConfig(
         project=data["project"],
