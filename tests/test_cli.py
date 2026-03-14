@@ -84,6 +84,30 @@ def test_cli_process_no_plots(deployment_dir: Path, config_file: Path, tmp_path:
     assert len(png_files) == 0
 
 
+def test_cli_init_creates_config(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ["init"])
+        assert result.exit_code == 0, result.output
+        assert Path("config.yml").exists()
+
+
+def test_cli_init_custom_output(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        result = runner.invoke(main, ["init", "--output", "custom.yml"])
+        assert result.exit_code == 0, result.output
+        assert Path("custom.yml").exists()
+
+
+def test_cli_init_refuses_overwrite(tmp_path: Path):
+    runner = CliRunner()
+    with runner.isolated_filesystem(temp_dir=tmp_path):
+        Path("config.yml").write_text("existing")
+        result = runner.invoke(main, ["init"])
+        assert result.exit_code == 1
+
+
 def test_cli_process_with_plots(
     deployment_dir: Path, config_file: Path, tmp_path: Path
 ):

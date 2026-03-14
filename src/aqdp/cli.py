@@ -16,6 +16,25 @@ def main():
 
 
 @main.command()
+@click.option(
+    "--output",
+    default="config.yml",
+    type=click.Path(path_type=Path),
+    help="Output path for the config file",
+)
+def init(output):
+    """Generate a starter YAML configuration file."""
+    from aqdp.config import generate_config
+
+    try:
+        generate_config(output)
+    except FileExistsError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        raise SystemExit(1)
+    click.echo(f"Wrote starter config to {output}")
+
+
+@main.command()
 @click.argument("deployment_dir", type=click.Path(exists=True, path_type=Path))
 @click.option(
     "--config",
