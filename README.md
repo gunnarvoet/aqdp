@@ -95,7 +95,8 @@ water_depth: 250.0
 instrument_depth: 50.0
 qc_enabled: true
 plots_enabled: true
-output_dir: "output/"
+output_dir: "proc/"
+plots_dir: "fig/"
 ```
 
 | Field | Type | Required | Description |
@@ -109,7 +110,8 @@ output_dir: "output/"
 | `instrument_depth` | float | No | Instrument depth in metres |
 | `qc_enabled` | bool | Yes | Enable QC processing |
 | `plots_enabled` | bool | Yes | Enable plot generation |
-| `output_dir` | str | Yes | Output directory path |
+| `output_dir` | str | Yes | Output directory for processed data |
+| `plots_dir` | str | Yes | Output directory for plots |
 
 ## Input Data Layout
 
@@ -125,14 +127,14 @@ deployment_dir/
 
 ## Output
 
-NetCDF files are written to the configured output directory:
+NetCDF files are written to `output_dir` and plots to `plots_dir`:
 
 - `{deployment_name}_dat.nc` — Measurement data
 - `{deployment_name}_dia.nc` — Diagnostics data
 
 Where `deployment_name` comes from the .hdr file (e.g., `18223`).
 
-Files follow **CF-1.6** conventions with global attributes for project metadata, instrument info, and time encoded as seconds since 1970-01-01T00:00:00Z. When plots are enabled, PNG figures are also written to the output directory.
+Files follow **CF-1.6** conventions with global attributes for project metadata, instrument info, and time encoded as seconds since 1970-01-01T00:00:00Z. When plots are enabled, PNG figures are written to `plots_dir`.
 
 ## Data Variables
 

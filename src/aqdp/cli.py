@@ -108,6 +108,7 @@ def process(deployment_dir, config, output_dir, no_qc, no_plots):
         cfg.plots_enabled = False
 
     cfg.output_dir.mkdir(parents=True, exist_ok=True)
+    cfg.plots_dir.mkdir(parents=True, exist_ok=True)
 
     # Parse header
     header = read_header(deployment_dir)
@@ -148,19 +149,19 @@ def process(deployment_dir, config, output_dir, no_qc, no_plots):
         import matplotlib.pyplot as plt
 
         fig = plot_velocity(ds_dat)
-        fig.savefig(cfg.output_dir / f"{name}_velocity.png", dpi=150)
+        fig.savefig(cfg.plots_dir / f"{name}_velocity.png", dpi=150)
         plt.close(fig)
 
         fig = plot_pressure(ds_dat)
-        fig.savefig(cfg.output_dir / f"{name}_pressure.png", dpi=150)
+        fig.savefig(cfg.plots_dir / f"{name}_pressure.png", dpi=150)
         plt.close(fig)
 
         if ds_dia is not None:
             fig = plot_diagnostics(ds_dia)
-            fig.savefig(cfg.output_dir / f"{name}_diagnostics.png", dpi=150)
+            fig.savefig(cfg.plots_dir / f"{name}_diagnostics.png", dpi=150)
             plt.close(fig)
 
-        click.echo(f"  Saved plots to {cfg.output_dir}")
+        click.echo(f"  Saved plots to {cfg.plots_dir}")
 
     # Write NetCDF
     to_netcdf(ds_dat, cfg.output_dir / f"{name}_dat.nc", cfg)

@@ -20,6 +20,7 @@ def config_file(tmp_path: Path) -> Path:
         "qc_enabled": False,
         "plots_enabled": False,
         "output_dir": str(tmp_path / "output"),
+        "plots_dir": str(tmp_path / "fig"),
     }
     p = tmp_path / "config.yml"
     p.write_text(yaml.dump(config))
@@ -79,8 +80,8 @@ def test_cli_process_no_plots(deployment_dir: Path, config_file: Path, tmp_path:
         ],
     )
     assert result.exit_code == 0, result.output
-    output_dir = tmp_path / "output"
-    png_files = list(output_dir.glob("*.png"))
+    fig_dir = tmp_path / "fig"
+    png_files = list(fig_dir.glob("*.png"))
     assert len(png_files) == 0
 
 
@@ -162,6 +163,6 @@ def test_cli_process_with_plots(
         ],
     )
     assert result.exit_code == 0, result.output
-    output_dir = tmp_path / "output"
-    png_files = list(output_dir.glob("*.png"))
+    fig_dir = tmp_path / "fig"
+    png_files = list(fig_dir.glob("*.png"))
     assert len(png_files) >= 1

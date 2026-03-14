@@ -31,6 +31,7 @@ def test_full_pipeline_dat_roundtrip(deployment_dir: Path, tmp_path: Path):
         qc_enabled=True,
         plots_enabled=False,
         output_dir=tmp_path,
+        plots_dir=tmp_path,
     )
     output = tmp_path / "test_dat.nc"
     to_netcdf(ds, output, config)

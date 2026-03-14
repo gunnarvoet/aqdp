@@ -18,7 +18,8 @@ def config_file(tmp_path: Path) -> Path:
         "instrument_depth": 50.0,
         "qc_enabled": True,
         "plots_enabled": True,
-        "output_dir": "output/",
+        "output_dir": "proc/",
+        "plots_dir": "fig/",
     }
     p = tmp_path / "config.yml"
     p.write_text(yaml.dump(config))
@@ -43,7 +44,8 @@ def test_read_config_processing_options(config_file: Path):
     config = read_config(config_file)
     assert config.qc_enabled is True
     assert config.plots_enabled is True
-    assert config.output_dir == Path("output/")
+    assert config.output_dir == Path("proc/")
+    assert config.plots_dir == Path("fig/")
 
 
 def test_read_config_optional_fields_default_none(tmp_path: Path):
@@ -54,6 +56,7 @@ def test_read_config_optional_fields_default_none(tmp_path: Path):
         "qc_enabled": False,
         "plots_enabled": False,
         "output_dir": "out/",
+        "plots_dir": "fig/",
     }
     p = tmp_path / "config.yml"
     p.write_text(yaml.dump(config))
@@ -88,6 +91,8 @@ def test_generate_config_roundtrips(tmp_path: Path):
     assert config.mooring == "MOORING_ID"
     assert config.qc_enabled is True
     assert config.plots_enabled is True
+    assert config.output_dir == Path("proc/")
+    assert config.plots_dir == Path("fig/")
 
 
 def test_generate_config_refuses_overwrite(tmp_path: Path):

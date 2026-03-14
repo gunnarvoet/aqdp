@@ -268,6 +268,7 @@ def sample_config(tmp_path: Path) -> ProcessingConfig:
         qc_enabled=False,
         plots_enabled=False,
         output_dir=tmp_path,
+        plots_dir=tmp_path,
     )
 
 

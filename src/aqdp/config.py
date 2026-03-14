@@ -19,6 +19,7 @@ _REQUIRED_FIELDS = {
     "qc_enabled",
     "plots_enabled",
     "output_dir",
+    "plots_dir",
 }
 
 
@@ -34,6 +35,7 @@ class ProcessingConfig:
     qc_enabled: bool
     plots_enabled: bool
     output_dir: Path
+    plots_dir: Path
 
 
 _STARTER_TEMPLATE = """\
@@ -48,7 +50,8 @@ mooring: "MOORING_ID"
 
 qc_enabled: true
 plots_enabled: true
-output_dir: "output/"
+output_dir: "proc/"
+plots_dir: "fig/"
 """
 
 
@@ -108,4 +111,5 @@ def read_config(path: Path) -> ProcessingConfig:
         qc_enabled=data["qc_enabled"],
         plots_enabled=data["plots_enabled"],
         output_dir=Path(data["output_dir"]),
+        plots_dir=Path(data["plots_dir"]),
     )
