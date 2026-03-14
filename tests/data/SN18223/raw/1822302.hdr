@@ -1,0 +1,186 @@
+[C:\Users\Helen\Desktop\MOTIVE\AQD-DW\Mooring-A\SN18223\1822302.AQD]
+---------------------------------------------------------------------
+Number of measurements                778493
+Number of checksum errors             0
+Time of first measurement             11/12/2024 16:08:50
+Time of last measurement              12/14/2025 03:02:58
+
+User setup
+---------------------------------------------------------------------
+Measurement interval                  44 sec
+Sampling rate                         NORMAL
+Average interval                      1 sec
+Measurement load                      100 %
+Transmit pulse length                 0.75 m
+Blanking distance                     0.50 m
+Compass update rate                   1 sec
+Diagnostics measurements              ENABLED
+Diagnostics - Interval                43604 sec
+Diagnostics - Number of samples       20
+Diagnostics - Cell number             1
+Diagnostics - Number of pings         20
+Analog input 1                        NONE
+Raw magnetometer output               ON
+External input 2                      NONE
+External input 3                      NONE
+Power output                          DISABLED
+Powerlevel                            HIGH
+Coordinate system                     ENU
+Sound speed                           MEASURED
+Salinity                              35.0 ppt
+Distance between pings                10.00 m
+Number of beams                       3
+Number of pings per burst             23
+Software version                      1.40.16
+Deployment name                       18223
+Wrap mode                             OFF
+Deployment time                       11/12/2024 16:08:44
+Comments                              20241112_MOTIVE_18223
+System1                               125
+System2                               55
+System3                               32
+System4                               437
+System5                               512
+System9                               0
+System10                              0
+System11                              0
+System12                              0
+System13                              0
+System14                              1
+System16                              1
+System17                              32
+System22                              43604
+System28                              20
+System29                              1
+System30                              20
+System31                              15618 15646 15673 15699
+System42                              0
+System43                              0
+System44                              0
+System45                              6
+Start command                         Recorder deployment
+CRC download                          ON
+
+Hardware configuration
+---------------------------------------------------------------------
+Serial number                         AQD18223
+Hardware revision                     4 (E)
+Recorder size                         15185 MByte
+Firmware version                      3.42
+Velocity range                        NORMAL
+Power output                          12V
+Sync signal data out delay            0 sec
+Sync signal power down delay          0 sec
+ProLog ID                             5905
+ProLog firmware version               4.24
+SD Card Inserted                      YES
+SD Card Ready                         YES
+SD Card Write protected               NO
+SD Card Type                          SDHC
+SD Card Supported                     YES
+
+Head configuration
+---------------------------------------------------------------------
+Pressure sensor                       YES
+Compass                               YES
+Tilt sensor                           YES
+System 1                              1
+Head frequency                        2000 kHz
+Serial number                         A6L 12746
+Transformation matrix                 0.7356 -0.3677 -0.3677
+                                      0.0000 -0.6370 0.6370
+                                      0.7888 0.7888 0.7888
+Magnetometer calibration matrix       0.9532 -0.0005 -0.0225
+                                      -0.0102 1.0000 0.0074
+                                      0.0034 -0.0060 0.9832
+Compass hard iron calibration         -51 111 4
+Pressure sensor calibration           0 13 64308 6497
+Number of beams                       3
+System5                               65 65 65 0
+System7                               -31333 2481 13903 -290
+                                      -31715 -2087 13984 309
+System8                               0 0 -1
+                                      0 1 0
+                                      1 0 0
+System9                               0 0 -1
+                                      0 -1 0
+                                      -1 0 0
+System10                              0 -1 1 0
+System11                              0 -1 -1 0
+System13                              1481 259 7128 10868
+System14                              -28178 -139 13709 -130
+                                      -28334 2818 13798 -458
+System15                              31234 -18 -737 -333
+                                      32767 243 112 -198
+                                      32218 -51 111 4
+                                      0 0 0 0
+System16                              0 0 0 0
+System17                              5461
+System18                              3600
+System19                              3600
+System20                              10000
+
+Data file format
+---------------------------------------------------------------------
+[C:\Users\Helen\Desktop\MOTIVE\AQD-DW\Mooring-A\SN18223\1822302.dat]
+ 1   Month                            (1-12)
+ 2   Day                              (1-31)
+ 3   Year
+ 4   Hour                             (0-23)
+ 5   Minute                           (0-59)
+ 6   Second                           (0-59)
+ 7   Burst counter
+ 8   Ensemble counter
+ 9   Error code
+10   Status code
+11   Velocity (Beam1|X|East)          (m/s)
+12   Velocity (Beam2|Y|North)         (m/s)
+13   Velocity (Beam3|Z|Up)            (m/s)
+14   Amplitude (Beam1)                (counts)
+15   Amplitude (Beam2)                (counts)
+16   Amplitude (Beam3)                (counts)
+17   Battery voltage                  (V)
+18   Soundspeed                       (m/s)
+19   Soundspeed used                  (m/s)
+20   Heading                          (degrees)
+21   Pitch                            (degrees)
+22   Roll                             (degrees)
+23   Pressure                         (dbar)
+24   Pressure                         (m)
+25   Temperature                      (degrees C)
+26   Analog input 1
+27   Analog input 2
+28   Speed                            (m/s)
+29   Direction                        (degrees)
+30   Magnetometer X                   (counts)
+31   Magnetometer Y                   (counts)
+32   Magnetometer Z                   (counts)
+---------------------------------------------------------------------
+[C:\Users\Helen\Desktop\MOTIVE\AQD-DW\Mooring-A\SN18223\1822302.dia]
+ 1   Month                            (1-12)
+ 2   Day                              (1-31)
+ 3   Year
+ 4   Hour                             (0-23)
+ 5   Minute                           (0-59)
+ 6   Second                           (0-59)
+ 7   Error code
+ 8   Status code
+ 9   Velocity (Beam1|X|East)          (m/s)
+10   Velocity (Beam2|Y|North)         (m/s)
+11   Velocity (Beam3|Z|Up)            (m/s)
+12   Amplitude (Beam1)                (counts)
+13   Amplitude (Beam2)                (counts)
+14   Amplitude (Beam3)                (counts)
+15   Battery voltage                  (V)
+16   Soundspeed                       (m/s)
+17   Soundspeed used                  (m/s)
+18   Heading                          (degrees)
+19   Pitch                            (degrees)
+20   Roll                             (degrees)
+21   Pressure                         (dbar)
+22   Pressure                         (m)
+23   Temperature                      (degrees C)
+24   Analog input 1
+25   Analog input 2
+26   Speed                            (m/s)
+27   Direction                        (degrees)
