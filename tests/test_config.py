@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from aqdp.config import AqdpConfigError, ProcessingConfig, read_config
+from aqdp.config import AqdpConfigError, ProcessingConfig, generate_config, read_config
 
 
 @pytest.fixture
@@ -70,3 +70,28 @@ def test_read_config_missing_required_field_raises(tmp_path: Path):
     p.write_text(yaml.dump(config))
     with pytest.raises(AqdpConfigError):
         read_config(p)
+
+
+def test_generate_config_writes_file(tmp_path: Path):
+    p = tmp_path / "config.yml"
+    generate_config(p)
+    assert p.exists()
+    assert p.stat().st_size > 0
+
+
+def test_generate_config_roundtrips(tmp_path: Path):
+    p = tmp_path / "config.yml"
+    generate_config(p)
+    config = read_config(p)
+    assert config.project == "PROJECT_NAME"
+    assert config.pi == "INVESTIGATOR_NAME"
+    assert config.mooring == "MOORING_ID"
+    assert config.qc_enabled is True
+    assert config.plots_enabled is True
+
+
+def test_generate_config_refuses_overwrite(tmp_path: Path):
+    p = tmp_path / "config.yml"
+    p.write_text("existing")
+    with pytest.raises(FileExistsError):
+        generate_config(p)

@@ -36,6 +36,40 @@ class ProcessingConfig:
     output_dir: Path
 
 
+_STARTER_TEMPLATE = """\
+project: "PROJECT_NAME"
+pi: "INVESTIGATOR_NAME"
+mooring: "MOORING_ID"
+
+# latitude: 0.0
+# longitude: 0.0
+# water_depth: 0.0
+# instrument_depth: 0.0
+
+qc_enabled: true
+plots_enabled: true
+output_dir: "output/"
+"""
+
+
+def generate_config(path: Path) -> None:
+    """Write a starter YAML config file with sensible defaults.
+
+    Parameters
+    ----------
+    path : Path
+        Destination file path.
+
+    Raises
+    ------
+    FileExistsError
+        If *path* already exists.
+    """
+    if path.exists():
+        raise FileExistsError(f"File already exists: {path}")
+    path.write_text(_STARTER_TEMPLATE)
+
+
 def read_config(path: Path) -> ProcessingConfig:
     """Read a YAML config file and return a ProcessingConfig.
 

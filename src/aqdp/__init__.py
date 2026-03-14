@@ -1,6 +1,6 @@
 """aqdp — Nortek Aquadopp data processing package."""
 
-from aqdp.config import AqdpConfigError, ProcessingConfig, read_config
+from aqdp.config import AqdpConfigError, ProcessingConfig, generate_config, read_config
 from aqdp.io import (
     AqdpParsingError,
     HeaderConfig,
@@ -20,6 +20,7 @@ __all__ = [
     "ProcessingConfig",
     "flag_by_range",
     "flag_by_status",
+    "generate_config",
     "plot_diagnostics",
     "plot_pressure",
     "plot_velocity",
