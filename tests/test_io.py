@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from aqdp.io import HeaderConfig, read_dat, read_header
+from aqdp.io import HeaderConfig, read_dat, read_dia, read_header
 
 
 def test_read_header_returns_header_config(deployment_dir: Path):
@@ -163,3 +163,50 @@ def test_read_dat_stores_header_attrs(deployment_dir: Path):
     ds = read_dat(deployment_dir, header)
     assert ds.attrs["serial_number"] == "AQD18223"
     assert ds.attrs["coordinate_system"] == "ENU"
+
+
+# --- .dia parsing tests ---
+
+
+def test_read_dia_returns_dataset(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    assert isinstance(ds, xr.Dataset)
+
+
+def test_read_dia_has_velocity_variables(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    assert "u" in ds
+    assert "v" in ds
+    assert "w" in ds
+
+
+def test_read_dia_no_magnetometer(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    assert "magnetometer_x" not in ds
+    assert "burst_counter" not in ds
+
+
+def test_read_dia_has_speed_direction(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    assert "speed" in ds
+    assert "direction" in ds
+
+
+def test_read_dia_first_timestamp(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    first_time = ds.time.values[0]
+    expected = np.datetime64("2024-11-12T16:08:52", "ns")
+    assert first_time == expected
+
+
+def test_read_dia_first_velocity_values(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds = read_dia(deployment_dir, header)
+    assert float(ds.u.values[0]) == pytest.approx(-0.110)
+    assert float(ds.v.values[0]) == pytest.approx(-0.083)
+    assert float(ds.w.values[0]) == pytest.approx(-0.242)

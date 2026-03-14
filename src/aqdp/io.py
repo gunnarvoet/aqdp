@@ -347,3 +347,70 @@ def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:
     ds = xr.Dataset(data_vars, coords={"time": time.values})
     ds.attrs.update(_header_to_attrs(header))
     return ds
+
+
+# Column mapping for .dia files (0-indexed)
+_DIA_COLUMNS = {
+    6: "error_code",
+    7: "status_code",
+    8: "u",
+    9: "v",
+    10: "w",
+    11: "amplitude_beam1",
+    12: "amplitude_beam2",
+    13: "amplitude_beam3",
+    14: "battery_voltage",
+    15: "sound_speed",
+    16: "sound_speed_used",
+    17: "heading",
+    18: "pitch",
+    19: "roll",
+    20: "pressure",
+    21: "depth",
+    22: "temperature",
+    23: "analog_input_1",
+    24: "analog_input_2",
+    25: "speed",
+    26: "direction",
+}
+
+
+def read_dia(path: Path, header: HeaderConfig) -> xr.Dataset:
+    """Read a .dia diagnostics file into an xarray Dataset.
+
+    Parameters
+    ----------
+    path : Path
+        Deployment root directory containing a ``raw/`` subdirectory.
+    header : HeaderConfig
+        Parsed header metadata.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with diagnostics variables and CF attributes.
+    """
+    dia_path = _find_file(path, "raw", ".dia")
+    df = pd.read_csv(
+        dia_path,
+        sep=r"\s+",
+        header=None,
+        dtype={6: str, 7: str},
+    )
+
+    # Construct time coordinate from columns 0-5
+    time = pd.to_datetime(
+        df[[2, 0, 1, 3, 4, 5]].rename(
+            columns={2: "year", 0: "month", 1: "day", 3: "hour", 4: "minute", 5: "second"}
+        )
+    )
+
+    # Build data variables
+    data_vars = {}
+    for col_idx, var_name in _DIA_COLUMNS.items():
+        attrs = DAT_VAR_ATTRS.get(var_name, {})
+        data_vars[var_name] = ("time", df[col_idx].values, attrs)
+
+    ds = xr.Dataset(data_vars, coords={"time": time.values})
+    ds.attrs.update(_header_to_attrs(header))
+    return ds
