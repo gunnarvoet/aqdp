@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
+import xarray as xr
 
 
 class AqdpParsingError(Exception):
@@ -202,3 +204,146 @@ def read_header(path: Path) -> HeaderConfig:
         ),
         head_serial_number=head.get("Serial number", ""),
     )
+
+
+# Variable attributes for CF compliance
+DAT_VAR_ATTRS = {
+    "u": {
+        "units": "m/s",
+        "standard_name": "eastward_sea_water_velocity",
+        "long_name": "Eastward velocity",
+    },
+    "v": {
+        "units": "m/s",
+        "standard_name": "northward_sea_water_velocity",
+        "long_name": "Northward velocity",
+    },
+    "w": {
+        "units": "m/s",
+        "standard_name": "upward_sea_water_velocity",
+        "long_name": "Upward velocity",
+    },
+    "amplitude_beam1": {"units": "counts", "long_name": "Amplitude beam 1"},
+    "amplitude_beam2": {"units": "counts", "long_name": "Amplitude beam 2"},
+    "amplitude_beam3": {"units": "counts", "long_name": "Amplitude beam 3"},
+    "battery_voltage": {"units": "V", "long_name": "Battery voltage"},
+    "sound_speed": {
+        "units": "m/s",
+        "standard_name": "speed_of_sound_in_sea_water",
+        "long_name": "Measured sound speed",
+    },
+    "sound_speed_used": {"units": "m/s", "long_name": "Sound speed used in calculations"},
+    "heading": {"units": "degrees", "long_name": "Heading"},
+    "pitch": {"units": "degrees", "standard_name": "platform_pitch", "long_name": "Pitch"},
+    "roll": {"units": "degrees", "standard_name": "platform_roll", "long_name": "Roll"},
+    "pressure": {
+        "units": "dbar",
+        "standard_name": "sea_water_pressure",
+        "long_name": "Pressure",
+    },
+    "depth": {"units": "m", "standard_name": "depth", "long_name": "Depth", "positive": "down"},
+    "temperature": {
+        "units": "degrees_C",
+        "standard_name": "sea_water_temperature",
+        "long_name": "Temperature",
+    },
+    "analog_input_1": {"long_name": "Analog input 1"},
+    "analog_input_2": {"long_name": "Analog input 2"},
+    "speed": {"units": "m/s", "long_name": "Current speed"},
+    "direction": {"units": "degrees", "long_name": "Current direction"},
+    "magnetometer_x": {"units": "counts", "long_name": "Magnetometer X"},
+    "magnetometer_y": {"units": "counts", "long_name": "Magnetometer Y"},
+    "magnetometer_z": {"units": "counts", "long_name": "Magnetometer Z"},
+    "burst_counter": {"long_name": "Burst counter"},
+    "ensemble_counter": {"long_name": "Ensemble counter"},
+    "error_code": {"long_name": "Error code"},
+    "status_code": {"long_name": "Status code"},
+}
+
+# Column mapping for .dat files (0-indexed)
+_DAT_COLUMNS = {
+    6: "burst_counter",
+    7: "ensemble_counter",
+    8: "error_code",
+    9: "status_code",
+    10: "u",
+    11: "v",
+    12: "w",
+    13: "amplitude_beam1",
+    14: "amplitude_beam2",
+    15: "amplitude_beam3",
+    16: "battery_voltage",
+    17: "sound_speed",
+    18: "sound_speed_used",
+    19: "heading",
+    20: "pitch",
+    21: "roll",
+    22: "pressure",
+    23: "depth",
+    24: "temperature",
+    25: "analog_input_1",
+    26: "analog_input_2",
+    27: "speed",
+    28: "direction",
+    29: "magnetometer_x",
+    30: "magnetometer_y",
+    31: "magnetometer_z",
+}
+
+
+def _header_to_attrs(header: HeaderConfig) -> dict:
+    """Convert HeaderConfig fields to dataset attributes."""
+    return {
+        "serial_number": header.serial_number,
+        "deployment_name": header.deployment_name,
+        "coordinate_system": header.coordinate_system,
+        "head_frequency": header.head_frequency,
+        "firmware_version": header.firmware_version,
+        "deployment_time": str(header.deployment_time),
+        "comments": header.comments,
+        "measurement_interval": header.measurement_interval,
+        "blanking_distance": header.blanking_distance,
+        "n_beams": header.n_beams,
+        "salinity": header.salinity,
+    }
+
+
+def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:
+    """Read a .dat measurement file into an xarray Dataset.
+
+    Parameters
+    ----------
+    path : Path
+        Deployment root directory containing a ``raw/`` subdirectory.
+    header : HeaderConfig
+        Parsed header metadata.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with all measurement variables and CF attributes.
+    """
+    dat_path = _find_file(path, "raw", ".dat")
+    df = pd.read_csv(
+        dat_path,
+        sep=r"\s+",
+        header=None,
+        dtype={8: str, 9: str},
+    )
+
+    # Construct time coordinate from columns 0-5
+    time = pd.to_datetime(
+        df[[2, 0, 1, 3, 4, 5]].rename(
+            columns={2: "year", 0: "month", 1: "day", 3: "hour", 4: "minute", 5: "second"}
+        )
+    )
+
+    # Build data variables
+    data_vars = {}
+    for col_idx, var_name in _DAT_COLUMNS.items():
+        attrs = DAT_VAR_ATTRS.get(var_name, {})
+        data_vars[var_name] = ("time", df[col_idx].values, attrs)
+
+    ds = xr.Dataset(data_vars, coords={"time": time.values})
+    ds.attrs.update(_header_to_attrs(header))
+    return ds
