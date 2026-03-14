@@ -4,7 +4,7 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from aqdp.cli import main
+from aqdp.cli import _resolve_config, main
 
 
 @pytest.fixture
@@ -106,6 +106,41 @@ def test_cli_init_refuses_overwrite(tmp_path: Path):
         Path("config.yml").write_text("existing")
         result = runner.invoke(main, ["init"])
         assert result.exit_code == 1
+
+
+@pytest.mark.parametrize("filename", ["config.yml", "config.yaml"])
+def test_resolve_config_auto_detects_single_config(tmp_path: Path, filename: str):
+    cfg = tmp_path / filename
+    cfg.write_text("project: test\n")
+    result = _resolve_config(None, tmp_path)
+    assert result == cfg
+
+
+def test_resolve_config_errors_on_no_yml(tmp_path: Path):
+    with pytest.raises(SystemExit) as exc_info:
+        _resolve_config(None, tmp_path)
+    assert exc_info.value.code == 1
+
+
+def test_resolve_config_errors_on_multiple_yml(tmp_path: Path):
+    (tmp_path / "a.yml").write_text("project: a\n")
+    (tmp_path / "b.yaml").write_text("project: b\n")
+    with pytest.raises(SystemExit) as exc_info:
+        _resolve_config(None, tmp_path)
+    assert exc_info.value.code == 1
+
+
+def test_resolve_config_explicit_path_passthrough(tmp_path: Path):
+    cfg = tmp_path / "my.yml"
+    cfg.write_text("project: test\n")
+    result = _resolve_config(cfg, tmp_path)
+    assert result == cfg
+
+
+def test_resolve_config_explicit_path_missing(tmp_path: Path):
+    with pytest.raises(SystemExit) as exc_info:
+        _resolve_config(tmp_path / "nonexistent.yml", tmp_path)
+    assert exc_info.value.code == 1
 
 
 def test_cli_process_with_plots(

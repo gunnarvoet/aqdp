@@ -17,7 +17,8 @@ uv pip install -e ".[dev]"
 aqdp init
 
 # Edit config.yml with your project details, then process
-aqdp process /path/to/deployment --config config.yml
+# Place config.yml in the deployment dir for auto-detection, or use --config
+aqdp process /path/to/deployment
 ```
 
 This reads the Aquadopp text files from the deployment directory, applies quality control, generates plots, and writes NetCDF output.
@@ -33,13 +34,13 @@ aqdp init [OPTIONS]
 | `--output PATH` | No | Output path (default: `config.yml`) |
 
 ```
-aqdp process DEPLOYMENT_DIR --config PATH [OPTIONS]
+aqdp process DEPLOYMENT_DIR [OPTIONS]
 ```
 
 | Argument / Option | Required | Description |
 |-------------------|----------|-------------|
 | `DEPLOYMENT_DIR`  | Yes      | Path to the deployment directory |
-| `--config PATH`   | Yes      | Path to YAML configuration file |
+| `--config PATH`   | No       | Path to YAML configuration file (auto-detected from deployment directory if omitted) |
 | `--output-dir PATH` | No    | Override the output directory from config |
 | `--no-qc`         | No       | Skip quality control steps |
 | `--no-plots`      | No       | Skip plot generation |

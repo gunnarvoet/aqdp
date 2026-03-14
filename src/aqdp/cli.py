@@ -34,13 +34,45 @@ def init(output):
     click.echo(f"Wrote starter config to {output}")
 
 
+def _resolve_config(config: Path | None, deployment_dir: Path) -> Path:
+    """Return the config path, auto-detecting from deployment_dir if needed."""
+    if config is not None:
+        if not config.exists():
+            click.echo(f"Error: Config file not found: {config}", err=True)
+            raise SystemExit(1)
+        return config
+
+    matches = sorted(
+        p
+        for p in set(deployment_dir.glob("*.yml")) | set(deployment_dir.glob("*.yaml"))
+        if p.is_file()
+    )
+    if len(matches) == 1:
+        click.echo(f"Using config: {matches[0]}")
+        return matches[0]
+    if len(matches) == 0:
+        click.echo(
+            f"Error: No .yml/.yaml config file found in {deployment_dir}. "
+            "Use --config to specify.",
+            err=True,
+        )
+        raise SystemExit(1)
+    names = ", ".join(str(m.name) for m in matches)
+    click.echo(
+        f"Error: Found multiple config files in {deployment_dir}: {names}. "
+        "Use --config to specify.",
+        err=True,
+    )
+    raise SystemExit(1)
+
+
 @main.command()
 @click.argument("deployment_dir", type=click.Path(exists=True, path_type=Path))
 @click.option(
     "--config",
-    required=True,
-    type=click.Path(exists=True, path_type=Path),
-    help="YAML config file",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="YAML config file (auto-detected if omitted)",
 )
 @click.option(
     "--output-dir",
@@ -64,6 +96,7 @@ def process(deployment_dir, config, output_dir, no_qc, no_plots):
     from aqdp.plot import plot_diagnostics, plot_pressure, plot_velocity
     from aqdp.qc import flag_by_range, flag_by_status
 
+    config = _resolve_config(config, deployment_dir)
     cfg = read_config(config)
 
     # CLI overrides
