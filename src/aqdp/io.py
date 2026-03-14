@@ -466,3 +466,48 @@ def read_log(path: Path) -> xr.Dataset:
         },
         coords={"time": time_arr.values},
     )
+
+
+def to_netcdf(ds: xr.Dataset, output: Path, config) -> None:
+    """Write a dataset to a CF-1.6 compliant NetCDF file.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset to write.
+    output : Path
+        Output file path.
+    config : ProcessingConfig
+        Processing configuration with metadata.
+    """
+    from datetime import datetime as dt
+
+    # Add global attributes from config
+    ds = ds.copy()
+    ds.attrs["Conventions"] = "CF-1.6"
+    ds.attrs["history"] = f"Created {dt.now().isoformat()} by aqdp v0.1.0"
+    serial = ds.attrs.get("serial_number", "unknown")
+    ds.attrs["source"] = f"Nortek Aquadopp {serial}"
+
+    # Add config metadata
+    ds.attrs["project"] = config.project
+    ds.attrs["pi"] = config.pi
+    ds.attrs["mooring"] = config.mooring
+    if config.latitude is not None:
+        ds.attrs["latitude"] = config.latitude
+    if config.longitude is not None:
+        ds.attrs["longitude"] = config.longitude
+    if config.water_depth is not None:
+        ds.attrs["water_depth"] = config.water_depth
+    if config.instrument_depth is not None:
+        ds.attrs["instrument_depth"] = config.instrument_depth
+
+    # Time encoding
+    encoding = {
+        "time": {
+            "units": "seconds since 1970-01-01T00:00:00Z",
+            "calendar": "standard",
+        }
+    }
+
+    ds.to_netcdf(output, encoding=encoding)

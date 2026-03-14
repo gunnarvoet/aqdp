@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from aqdp.io import HeaderConfig, read_dat, read_dia, read_header, read_log
+from aqdp.config import ProcessingConfig
+from aqdp.io import HeaderConfig, read_dat, read_dia, read_header, read_log, to_netcdf
 
 
 def test_read_header_returns_header_config(deployment_dir: Path):
@@ -233,3 +234,74 @@ def test_read_log_first_entry(deployment_dir: Path):
     ds = read_log(deployment_dir)
     assert str(ds.description.values[0]) == "First measurement"
     assert str(ds.level.values[0]) == "Info"
+
+
+# --- NetCDF output tests ---
+
+
+@pytest.fixture
+def sample_config(tmp_path: Path) -> ProcessingConfig:
+    return ProcessingConfig(
+        project="TEST",
+        pi="Test PI",
+        mooring="Test Mooring",
+        latitude=69.5,
+        longitude=-12.3,
+        water_depth=250.0,
+        instrument_depth=50.0,
+        qc_enabled=False,
+        plots_enabled=False,
+        output_dir=tmp_path,
+    )
+
+
+def test_to_netcdf_creates_file(deployment_dir: Path, tmp_path: Path, sample_config):
+    header = read_header(deployment_dir)
+    ds = read_dat(deployment_dir, header)
+    output = tmp_path / "test.nc"
+    to_netcdf(ds, output, sample_config)
+    assert output.exists()
+
+
+def test_to_netcdf_cf_conventions(deployment_dir: Path, tmp_path: Path, sample_config):
+    header = read_header(deployment_dir)
+    ds = read_dat(deployment_dir, header)
+    output = tmp_path / "test.nc"
+    to_netcdf(ds, output, sample_config)
+    result = xr.open_dataset(output)
+    assert result.attrs["Conventions"] == "CF-1.6"
+    assert result.attrs["project"] == "TEST"
+    assert result.attrs["serial_number"] == "AQD18223"
+    result.close()
+
+
+def test_to_netcdf_roundtrip_velocity(deployment_dir: Path, tmp_path: Path, sample_config):
+    header = read_header(deployment_dir)
+    ds = read_dat(deployment_dir, header)
+    output = tmp_path / "test.nc"
+    to_netcdf(ds, output, sample_config)
+    result = xr.open_dataset(output)
+    np.testing.assert_allclose(result.u.values[:5], ds.u.values[:5])
+    result.close()
+
+
+def test_to_netcdf_time_encoding(deployment_dir: Path, tmp_path: Path, sample_config):
+    header = read_header(deployment_dir)
+    ds = read_dat(deployment_dir, header)
+    output = tmp_path / "test.nc"
+    to_netcdf(ds, output, sample_config)
+    import netCDF4
+
+    nc = netCDF4.Dataset(output)
+    assert "seconds since" in nc.variables["time"].units
+    nc.close()
+
+
+def test_to_netcdf_has_history(deployment_dir: Path, tmp_path: Path, sample_config):
+    header = read_header(deployment_dir)
+    ds = read_dat(deployment_dir, header)
+    output = tmp_path / "test.nc"
+    to_netcdf(ds, output, sample_config)
+    result = xr.open_dataset(output)
+    assert "aqdp" in result.attrs["history"]
+    result.close()
