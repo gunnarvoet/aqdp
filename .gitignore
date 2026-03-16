@@ -6,3 +6,5 @@ dist/
 output/
 /data/
 .DS_Store
+.claude/
+uv.lock

@@ -226,3 +226,7 @@ uv run ruff check
 ## Test Data
 
 Test data lives in `tests/data/`. It contains a subset of data from instrument SN18223, deployed on the MOTIVE project.
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
