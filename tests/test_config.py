@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -91,6 +92,8 @@ def test_generate_config_roundtrips(tmp_path: Path):
     assert config.plots_enabled is True
     assert config.output_dir == Path("proc/")
     assert config.plots_dir == Path("fig/")
+    assert config.time_instrument is None
+    assert config.time_utc is None
 
 
 def test_generate_config_refuses_overwrite(tmp_path: Path):
@@ -98,3 +101,56 @@ def test_generate_config_refuses_overwrite(tmp_path: Path):
     p.write_text("existing")
     with pytest.raises(FileExistsError):
         generate_config(p)
+
+
+def test_read_config_drift_fields_parsed(tmp_path: Path):
+    config = {
+        "project": "TEST",
+        "pi": "Test PI",
+        "mooring": "Test Mooring",
+        "qc_enabled": False,
+        "plots_enabled": False,
+        "output_dir": "out/",
+        "plots_dir": "fig/",
+        "time_instrument": "2025-03-10 14:00:05",
+        "time_utc": "2025-03-10 14:00:00",
+    }
+    p = tmp_path / "config.yml"
+    p.write_text(yaml.dump(config))
+    result = read_config(p)
+    assert result.time_instrument == datetime(2025, 3, 10, 14, 0, 5)
+    assert result.time_utc == datetime(2025, 3, 10, 14, 0, 0)
+
+
+def test_read_config_drift_fields_default_none(tmp_path: Path):
+    config = {
+        "project": "TEST",
+        "pi": "Test PI",
+        "mooring": "Test Mooring",
+        "qc_enabled": False,
+        "plots_enabled": False,
+        "output_dir": "out/",
+        "plots_dir": "fig/",
+    }
+    p = tmp_path / "config.yml"
+    p.write_text(yaml.dump(config))
+    result = read_config(p)
+    assert result.time_instrument is None
+    assert result.time_utc is None
+
+
+def test_read_config_drift_only_one_field_raises(tmp_path: Path):
+    config = {
+        "project": "TEST",
+        "pi": "Test PI",
+        "mooring": "Test Mooring",
+        "qc_enabled": False,
+        "plots_enabled": False,
+        "output_dir": "out/",
+        "plots_dir": "fig/",
+        "time_instrument": "2025-03-10 14:00:05",
+    }
+    p = tmp_path / "config.yml"
+    p.write_text(yaml.dump(config))
+    with pytest.raises(AqdpConfigError):
+        read_config(p)

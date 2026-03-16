@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -35,6 +36,8 @@ class ProcessingConfig:
     plots_enabled: bool
     output_dir: Path
     plots_dir: Path
+    time_instrument: datetime | None = None
+    time_utc: datetime | None = None
 
 
 _STARTER_TEMPLATE = """\
@@ -45,6 +48,10 @@ mooring: "MOORING_ID"
 # latitude: 0.0
 # longitude: 0.0
 # bottom_depth: 0.0
+
+# Clock drift correction
+# time_instrument: "YYYY-MM-DD HH:MM:SS"
+# time_utc: "YYYY-MM-DD HH:MM:SS"
 
 qc_enabled: true
 plots_enabled: true
@@ -98,6 +105,25 @@ def read_config(path: Path) -> ProcessingConfig:
             f"Missing required config fields: {', '.join(sorted(missing))}"
         )
 
+    time_instrument_raw = data.get("time_instrument")
+    time_utc_raw = data.get("time_utc")
+
+    if (time_instrument_raw is None) != (time_utc_raw is None):
+        raise AqdpConfigError(
+            "Both time_instrument and time_utc must be provided together"
+        )
+
+    def _parse_datetime(value):
+        """Parse a datetime from YAML — may be str or datetime (YAML auto-parses)."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        return datetime.fromisoformat(value)
+
+    time_instrument = _parse_datetime(time_instrument_raw)
+    time_utc = _parse_datetime(time_utc_raw)
+
     return ProcessingConfig(
         project=data["project"],
         pi=data["pi"],
@@ -109,4 +135,6 @@ def read_config(path: Path) -> ProcessingConfig:
         plots_enabled=data["plots_enabled"],
         output_dir=Path(data["output_dir"]),
         plots_dir=Path(data["plots_dir"]),
+        time_instrument=time_instrument,
+        time_utc=time_utc,
     )
