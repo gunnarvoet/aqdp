@@ -401,7 +401,7 @@ def test_read_dat_with_drift_config_corrects_time(deployment_dir: Path):
     ds_raw = read_dat(deployment_dir, header)
 
     assert not np.array_equal(ds_corrected.time.values, ds_raw.time.values)
-    assert ds_corrected.attrs["clock_drift_applied"] is True
+    assert ds_corrected.attrs["clock_drift_applied"]
 
 
 def test_read_dat_without_config_unchanged(deployment_dir: Path):
@@ -423,7 +423,7 @@ def test_read_dia_with_drift_config_corrects_time(deployment_dir: Path):
     ds_raw = read_dia(deployment_dir, header)
 
     assert not np.array_equal(ds_corrected.time.values, ds_raw.time.values)
-    assert ds_corrected.attrs["clock_drift_applied"] is True
+    assert ds_corrected.attrs["clock_drift_applied"]
 
 
 def test_apply_clock_drift_linear_correction():
@@ -465,7 +465,7 @@ def test_apply_clock_drift_adds_global_attributes():
 
     result = _apply_clock_drift(ds, header, config)
 
-    assert result.attrs["clock_drift_applied"] is True
+    assert result.attrs["clock_drift_applied"]
     assert result.attrs["clock_drift_instrument_time"] == "2025-01-02 00:00:10"
     assert result.attrs["clock_drift_utc_time"] == "2025-01-02 00:00:00"
 

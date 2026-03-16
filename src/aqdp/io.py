@@ -384,7 +384,7 @@ def _apply_clock_drift(
     correction = fraction * drift_ns
 
     ds = ds.assign_coords(time=ds.time.values + correction)
-    ds.attrs["clock_drift_applied"] = True
+    ds.attrs["clock_drift_applied"] = 1
     ds.attrs["clock_drift_instrument_time"] = str(config.time_instrument)
     ds.attrs["clock_drift_utc_time"] = str(config.time_utc)
     return ds
