@@ -390,7 +390,7 @@ def _apply_clock_drift(
     return ds
 
 
-def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:
+def read_dat(path: Path, header: HeaderConfig, config: ProcessingConfig | None = None) -> xr.Dataset:
     """Read a .dat measurement file into an xarray Dataset.
 
     Parameters
@@ -435,6 +435,7 @@ def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:
 
     ds = xr.Dataset(data_vars, coords={"time": time.values})
     ds.attrs.update(_header_to_attrs(header))
+    ds = _apply_clock_drift(ds, header, config)
     return ds
 
 
@@ -464,7 +465,7 @@ _DIA_COLUMNS = {
 }
 
 
-def read_dia(path: Path, header: HeaderConfig) -> xr.Dataset:
+def read_dia(path: Path, header: HeaderConfig, config: ProcessingConfig | None = None) -> xr.Dataset:
     """Read a .dia diagnostics file into an xarray Dataset.
 
     Parameters
@@ -509,6 +510,7 @@ def read_dia(path: Path, header: HeaderConfig) -> xr.Dataset:
 
     ds = xr.Dataset(data_vars, coords={"time": time.values})
     ds.attrs.update(_header_to_attrs(header))
+    ds = _apply_clock_drift(ds, header, config)
     return ds
 
 

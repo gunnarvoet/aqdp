@@ -390,6 +390,42 @@ def _make_dataset(times: list[str]) -> xr.Dataset:
     )
 
 
+def test_read_dat_with_drift_config_corrects_time(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    last_time = datetime(2024, 11, 20, 0, 0, 10)
+    config = _make_config(
+        time_instrument=last_time,
+        time_utc=datetime(2024, 11, 20, 0, 0, 0),
+    )
+    ds_corrected = read_dat(deployment_dir, header, config)
+    ds_raw = read_dat(deployment_dir, header)
+
+    assert not np.array_equal(ds_corrected.time.values, ds_raw.time.values)
+    assert ds_corrected.attrs["clock_drift_applied"] is True
+
+
+def test_read_dat_without_config_unchanged(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    ds1 = read_dat(deployment_dir, header)
+    ds2 = read_dat(deployment_dir, header, None)
+
+    np.testing.assert_array_equal(ds1.time.values, ds2.time.values)
+
+
+def test_read_dia_with_drift_config_corrects_time(deployment_dir: Path):
+    header = read_header(deployment_dir)
+    last_time = datetime(2024, 11, 20, 0, 0, 10)
+    config = _make_config(
+        time_instrument=last_time,
+        time_utc=datetime(2024, 11, 20, 0, 0, 0),
+    )
+    ds_corrected = read_dia(deployment_dir, header, config)
+    ds_raw = read_dia(deployment_dir, header)
+
+    assert not np.array_equal(ds_corrected.time.values, ds_raw.time.values)
+    assert ds_corrected.attrs["clock_drift_applied"] is True
+
+
 def test_apply_clock_drift_linear_correction():
     """Verify linear interpolation: zero at start, full drift at instrument time."""
     from aqdp.io import _apply_clock_drift
