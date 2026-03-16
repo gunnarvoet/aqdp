@@ -116,13 +116,16 @@ def process(deployment_dir, config, output_dir, no_qc, no_plots):
     click.echo(f"Processing deployment {name} (SN {header.serial_number})")
 
     # Read measurement data
-    ds_dat = read_dat(deployment_dir, header)
+    ds_dat = read_dat(deployment_dir, header, cfg)
     click.echo(f"  Read {ds_dat.sizes['time']} measurement records")
+    if ds_dat.attrs.get("clock_drift_applied"):
+        drift = cfg.time_utc - cfg.time_instrument
+        click.echo(f"  Applied clock drift correction (drift: {drift.total_seconds():.1f}s)")
 
     # Read diagnostics (optional)
     ds_dia = None
     try:
-        ds_dia = read_dia(deployment_dir, header)
+        ds_dia = read_dia(deployment_dir, header, cfg)
         click.echo(f"  Read {ds_dia.sizes['time']} diagnostics records")
     except AqdpParsingError:
         click.echo("  Warning: No .dia file found, skipping diagnostics")
