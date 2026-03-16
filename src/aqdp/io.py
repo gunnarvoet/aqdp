@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import xarray as xr
+
+if TYPE_CHECKING:
+    from aqdp.config import ProcessingConfig
 
 
 class AqdpParsingError(Exception):
@@ -318,6 +323,71 @@ def _header_to_attrs(header: HeaderConfig) -> dict:
         "n_beams": header.n_beams,
         "salinity": header.salinity,
     }
+
+
+def _apply_clock_drift(
+    ds: xr.Dataset,
+    header: HeaderConfig,
+    config: ProcessingConfig | None,
+) -> xr.Dataset:
+    """Apply linear clock drift correction to the time coordinate.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset with a ``time`` coordinate.
+    header : HeaderConfig
+        Parsed header metadata (provides deployment_time).
+    config : ProcessingConfig or None
+        Processing config. If None or drift fields are absent, returns
+        *ds* unchanged.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with corrected time coordinate (or unchanged if no
+        drift info).
+    """
+    if config is None or config.time_instrument is None:
+        return ds
+
+    drift = config.time_utc - config.time_instrument
+    if abs(drift) > timedelta(hours=1):
+        warnings.warn(
+            f"Clock drift ({drift}) exceeds 1 hour — check "
+            f"time_instrument/time_utc for errors",
+            stacklevel=2,
+        )
+
+    if ds.sizes["time"] < 2:
+        warnings.warn(
+            "Cannot apply clock drift correction to dataset with fewer "
+            "than 2 records",
+            stacklevel=2,
+        )
+        return ds
+
+    deploy_start = np.datetime64(header.deployment_time)
+    instrument_end = np.datetime64(config.time_instrument)
+    total_span = instrument_end - deploy_start
+
+    if total_span == np.timedelta64(0):
+        warnings.warn(
+            "Cannot apply clock drift correction: total_span is zero",
+            stacklevel=2,
+        )
+        return ds
+
+    drift_ns = np.timedelta64(drift)
+    elapsed = ds.time.values - deploy_start
+    fraction = elapsed / total_span
+    correction = fraction * drift_ns
+
+    ds = ds.assign_coords(time=ds.time.values + correction)
+    ds.attrs["clock_drift_applied"] = True
+    ds.attrs["clock_drift_instrument_time"] = str(config.time_instrument)
+    ds.attrs["clock_drift_utc_time"] = str(config.time_utc)
+    return ds
 
 
 def read_dat(path: Path, header: HeaderConfig) -> xr.Dataset:

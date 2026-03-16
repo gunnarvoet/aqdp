@@ -1,6 +1,9 @@
+import warnings
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 import xarray as xr
 
@@ -323,3 +326,188 @@ def test_to_netcdf_has_history(deployment_dir: Path, tmp_path: Path, sample_conf
     result = xr.open_dataset(output)
     assert "aqdp" in result.attrs["history"]
     result.close()
+
+
+# --- Clock drift correction tests ---
+
+
+def _make_header(deployment_time: datetime) -> HeaderConfig:
+    """Create a minimal HeaderConfig for testing."""
+    return HeaderConfig(
+        serial_number="TEST",
+        deployment_name="test",
+        coordinate_system="ENU",
+        measurement_interval=60,
+        blanking_distance=0.5,
+        n_beams=3,
+        head_frequency=2000,
+        salinity=35.0,
+        deployment_time=deployment_time,
+        transformation_matrix=np.eye(3),
+        comments="",
+        n_measurements=10,
+        transmit_pulse_length=1.0,
+        sampling_rate="1 Hz",
+        average_interval=60,
+        compass_update_rate=1,
+        firmware_version="1.0",
+        software_version="1.0",
+        pressure_sensor_calibration=[0, 0, 0, 0],
+        n_pings_per_burst=1,
+        diagnostics_interval=720,
+        diagnostics_n_samples=20,
+        head_serial_number="H001",
+    )
+
+
+def _make_config(
+    time_instrument: datetime | None = None,
+    time_utc: datetime | None = None,
+) -> ProcessingConfig:
+    """Create a minimal ProcessingConfig for testing."""
+    return ProcessingConfig(
+        project="TEST",
+        pi="Test",
+        mooring="Test",
+        latitude=None,
+        longitude=None,
+        bottom_depth=None,
+        qc_enabled=False,
+        plots_enabled=False,
+        output_dir=Path("out/"),
+        plots_dir=Path("fig/"),
+        time_instrument=time_instrument,
+        time_utc=time_utc,
+    )
+
+
+def _make_dataset(times: list[str]) -> xr.Dataset:
+    """Create a minimal dataset with a time coordinate."""
+    time_arr = pd.to_datetime(times)
+    return xr.Dataset(
+        {"u": ("time", np.ones(len(times)))},
+        coords={"time": time_arr.values},
+    )
+
+
+def test_apply_clock_drift_linear_correction():
+    """Verify linear interpolation: zero at start, full drift at instrument time."""
+    from aqdp.io import _apply_clock_drift
+
+    deploy_time = datetime(2025, 1, 1, 0, 0, 0)
+    header = _make_header(deploy_time)
+    config = _make_config(
+        time_instrument=datetime(2025, 1, 2, 0, 0, 10),
+        time_utc=datetime(2025, 1, 2, 0, 0, 0),
+    )
+    ds = _make_dataset([
+        "2025-01-01T00:00:00",
+        "2025-01-01T12:00:05",
+        "2025-01-02T00:00:10",
+    ])
+
+    result = _apply_clock_drift(ds, header, config)
+
+    expected = pd.to_datetime([
+        "2025-01-01T00:00:00",
+        "2025-01-01T12:00:00",
+        "2025-01-02T00:00:00",
+    ]).values
+    np.testing.assert_array_equal(result.time.values, expected)
+
+
+def test_apply_clock_drift_adds_global_attributes():
+    from aqdp.io import _apply_clock_drift
+
+    deploy_time = datetime(2025, 1, 1, 0, 0, 0)
+    header = _make_header(deploy_time)
+    config = _make_config(
+        time_instrument=datetime(2025, 1, 2, 0, 0, 10),
+        time_utc=datetime(2025, 1, 2, 0, 0, 0),
+    )
+    ds = _make_dataset(["2025-01-01T00:00:00", "2025-01-02T00:00:10"])
+
+    result = _apply_clock_drift(ds, header, config)
+
+    assert result.attrs["clock_drift_applied"] is True
+    assert result.attrs["clock_drift_instrument_time"] == "2025-01-02 00:00:10"
+    assert result.attrs["clock_drift_utc_time"] == "2025-01-02 00:00:00"
+
+
+def test_apply_clock_drift_noop_when_no_drift_fields():
+    from aqdp.io import _apply_clock_drift
+
+    header = _make_header(datetime(2025, 1, 1))
+    config = _make_config()
+    ds = _make_dataset(["2025-01-01T00:00:00", "2025-01-02T00:00:00"])
+
+    result = _apply_clock_drift(ds, header, config)
+
+    np.testing.assert_array_equal(result.time.values, ds.time.values)
+    assert "clock_drift_applied" not in result.attrs
+
+
+def test_apply_clock_drift_noop_when_config_none():
+    from aqdp.io import _apply_clock_drift
+
+    header = _make_header(datetime(2025, 1, 1))
+    ds = _make_dataset(["2025-01-01T00:00:00", "2025-01-02T00:00:00"])
+    original_times = ds.time.values.copy()
+
+    result = _apply_clock_drift(ds, header, None)
+
+    np.testing.assert_array_equal(result.time.values, original_times)
+
+
+def test_apply_clock_drift_single_record_noop():
+    from aqdp.io import _apply_clock_drift
+
+    header = _make_header(datetime(2025, 1, 1))
+    config = _make_config(
+        time_instrument=datetime(2025, 1, 2, 0, 0, 10),
+        time_utc=datetime(2025, 1, 2, 0, 0, 0),
+    )
+    ds = _make_dataset(["2025-01-01T12:00:00"])
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = _apply_clock_drift(ds, header, config)
+        assert any("Cannot apply" in str(warning.message) for warning in w)
+
+    np.testing.assert_array_equal(result.time.values, ds.time.values)
+
+
+def test_apply_clock_drift_zero_total_span_noop():
+    """total_span is zero when deployment_time == time_instrument."""
+    from aqdp.io import _apply_clock_drift
+
+    deploy_time = datetime(2025, 1, 1, 0, 0, 0)
+    header = _make_header(deploy_time)
+    config = _make_config(
+        time_instrument=datetime(2025, 1, 1, 0, 0, 0),
+        time_utc=datetime(2025, 1, 1, 0, 0, 0),
+    )
+    ds = _make_dataset(["2025-01-01T00:00:00", "2025-01-01T12:00:00"])
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = _apply_clock_drift(ds, header, config)
+        assert any("total_span is zero" in str(warning.message) for warning in w)
+
+    np.testing.assert_array_equal(result.time.values, ds.time.values)
+
+
+def test_apply_clock_drift_large_drift_warns():
+    from aqdp.io import _apply_clock_drift
+
+    header = _make_header(datetime(2025, 1, 1))
+    config = _make_config(
+        time_instrument=datetime(2025, 1, 2, 2, 0, 0),
+        time_utc=datetime(2025, 1, 2, 0, 0, 0),
+    )
+    ds = _make_dataset(["2025-01-01T00:00:00", "2025-01-02T02:00:00"])
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        _apply_clock_drift(ds, header, config)
+        assert any("exceeds 1 hour" in str(warning.message) for warning in w)
