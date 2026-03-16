@@ -7,4 +7,5 @@ output/
 /data/
 .DS_Store
 .claude/
+.worktrees/
 uv.lock
