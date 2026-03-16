@@ -53,7 +53,7 @@ from aqdp import read_config, read_header, read_dat, flag_by_status, flag_by_ran
 
 config = read_config(Path("config.yaml"))
 header = read_header(Path("deployment/"))
-ds = read_dat(Path("deployment/"), header)
+ds = read_dat(Path("deployment/"), header, config)
 ds = flag_by_status(ds)
 ds = flag_by_range(ds)
 to_netcdf(ds, Path("output/"), config)
@@ -66,8 +66,8 @@ to_netcdf(ds, Path("output/"), config)
 | `generate_config(path)` | Write a starter YAML config file with sensible defaults |
 | `read_config(path)` | Parse a YAML configuration file into a `ProcessingConfig` |
 | `read_header(path)` | Parse an Aquadopp .hdr file into a `HeaderConfig` |
-| `read_dat(path, header)` | Read a .dat measurement file into an `xr.Dataset` |
-| `read_dia(path, header)` | Read a .dia diagnostics file into an `xr.Dataset` |
+| `read_dat(path, header, config=None)` | Read a .dat measurement file into an `xr.Dataset` |
+| `read_dia(path, header, config=None)` | Read a .dia diagnostics file into an `xr.Dataset` |
 | `read_log(path)` | Read a .ssl log file into an `xr.Dataset` |
 | `to_netcdf(ds, output, config)` | Write an `xr.Dataset` to a CF-1.6 NetCDF file |
 | `flag_by_status(ds)` | Flag records where `error_code` is nonzero |
@@ -92,6 +92,8 @@ mooring: "Mooring-A"
 latitude: 69.5
 longitude: -12.3
 bottom_depth: 250.0
+# time_instrument: "2025-03-10 14:00:05"
+# time_utc: "2025-03-10 14:00:00"
 qc_enabled: true
 plots_enabled: true
 output_dir: "proc/"
@@ -106,10 +108,29 @@ plots_dir: "fig/"
 | `latitude` | float | No | Latitude coordinate |
 | `longitude` | float | No | Longitude coordinate |
 | `bottom_depth` | float | No | Bottom depth in metres |
+| `time_instrument` | str | No | Instrument clock reading at recovery (ISO format) |
+| `time_utc` | str | No | True UTC time at recovery (ISO format) |
 | `qc_enabled` | bool | Yes | Enable QC processing |
 | `plots_enabled` | bool | Yes | Enable plot generation |
 | `output_dir` | str | Yes | Output directory for processed data |
 | `plots_dir` | str | Yes | Output directory for plots |
+
+## Clock Drift Correction
+
+Instrument clocks drift over time. To correct for this, record the instrument's
+clock reading and the true UTC time at recovery, then add them to the config:
+
+```yaml
+time_instrument: "2025-03-10 14:00:05"
+time_utc: "2025-03-10 14:00:00"
+```
+
+A linear correction is applied: zero at deployment start, scaling to the full
+measured drift at the recovery time. The correction is applied automatically
+during data reading when both fields are present.
+
+Corrected datasets include global attributes (`clock_drift_applied`,
+`clock_drift_instrument_time`, `clock_drift_utc_time`) for traceability.
 
 ## Input Data Layout
 
