@@ -51,7 +51,11 @@ class HeaderConfig:
 def _find_file(directory: Path, subdirectory: str, extension: str) -> Path:
     """Find a single file with the given extension in a subdirectory."""
     search_dir = directory / subdirectory
-    files = list(search_dir.glob(f"*{extension}"))
+    files = [
+        f
+        for f in search_dir.glob(f"*{extension}")
+        if not f.name.startswith("._")
+    ]
     if not files:
         raise AqdpParsingError(f"No {extension} file found in {search_dir}")
     return files[0]
@@ -603,6 +607,7 @@ def to_netcdf(ds: xr.Dataset, output: Path, config) -> None:
         "time": {
             "units": "seconds since 1970-01-01T00:00:00Z",
             "calendar": "standard",
+            "dtype": "float64",
         }
     }
 
