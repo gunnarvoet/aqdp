@@ -9,3 +9,4 @@ output/
 .claude/
 .worktrees/
 uv.lock
+docs/superpowers/
